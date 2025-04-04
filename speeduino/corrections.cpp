@@ -1105,17 +1105,17 @@ int8_t correctionSoftFlatShift(int8_t advance)
   // If the condition is met and debounce has passed, trigger flat shift
   if (flatSCondition && debouncePassed)
   {
-    Serial.print("debounce total time: ");
-    Serial.println((now - lastFSStartTime) / 1000UL); // Print the debounce time in milliseconds
+    // Serial.print("debounce total time: ");
+    // Serial.println((now - lastFSStartTime) / 1000UL); // Print the debounce time in milliseconds
 
     flatSStartTime = now;                       // Start timing flat shift duration
     flatSActive = true;                         // Set active flag
     lastFSStartTime = now;                      // Update last trigger time for debounce
-    Serial.print("Quick shift requested for "); // Debug message
-    Serial.print(configPage9.unused10_110);
-    Serial.print("ms, debounce time: ");
-    Serial.print(configPage9.unused10_111); // Print the requested flat shift time in milliseconds
-    Serial.println("ms");                   // Print the debounce time in milliseconds
+    // Serial.print("Quick shift requested for "); // Debug message
+    // Serial.print(configPage9.unused10_110);
+    // Serial.print("ms, debounce time: ");
+    // Serial.print(configPage9.unused10_111); // Print the requested flat shift time in milliseconds
+    // Serial.println("ms");                   // Print the debounce time in milliseconds
   }
 
   // If flat shift is active and within the defined duration
@@ -1126,11 +1126,11 @@ int8_t correctionSoftFlatShift(int8_t advance)
   }
   else
   {
-    if (flatSActive)
-    {
-      Serial.print("Flat shift actual time:");
-      Serial.println(now - flatSStartTime);
-    }
+    // if (flatSActive)
+    // {
+    //   Serial.print("Flat shift actual time:");
+    //   Serial.println(now - flatSStartTime);
+    // }
 
     BIT_CLEAR(currentStatus.status5, BIT_STATUS5_FLATSS); // Clear status bit
     flatSActive = false;                                  // Reset active flag
