@@ -905,20 +905,79 @@ int8_t correctionSoftLaunch(int8_t advance)
 }
 /** Ignition correction for soft flat shift.
  */
+// int8_t correctionSoftFlatShift(int8_t advance)
+// {
+//   int8_t ignSoftFlatValue = advance;
+
+//   if(configPage6.flatSEnable && currentStatus.clutchTrigger && (currentStatus.clutchEngagedRPM > ((unsigned int)(configPage6.flatSArm) * 100)) && (currentStatus.RPM > (currentStatus.clutchEngagedRPM - (configPage6.flatSSoftWin * 100) ) ) )
+//   {
+//     BIT_SET(currentStatus.status5, BIT_STATUS5_FLATSS);
+//     ignSoftFlatValue = configPage6.flatSRetard;
+//   }
+//   else { BIT_CLEAR(currentStatus.status5, BIT_STATUS5_FLATSS); }
+
+//   return ignSoftFlatValue;
+// }
+
+
+// Quickshifter adjustments for flat shift KYLE START
 int8_t correctionSoftFlatShift(int8_t advance)
 {
+  // configPage9.unused10_110 = quick shift time in milliseconds
+  // configPage9.unused10_111 = quick shift debounce time in milliseconds
+
+  // Timestamp when flat shift started
+  static uint32_t flatSStartTime = 0;
+
+  // Timestamp of the last flat shift retard trigger (used for debounce)
+  static uint32_t lastFSStartTime = 0;
+
+  // Flag indicating whether flat shift is currently active
+  static bool flatSActive = false;
+
+  // Default ignition advance value to return
   int8_t ignSoftFlatValue = advance;
 
-  if(configPage6.flatSEnable && currentStatus.clutchTrigger && (currentStatus.clutchEngagedRPM > ((unsigned int)(configPage6.flatSArm) * 100)) && (currentStatus.RPM > (currentStatus.clutchEngagedRPM - (configPage6.flatSSoftWin * 100) ) ) )
-  {
-    BIT_SET(currentStatus.status5, BIT_STATUS5_FLATSS);
-    ignSoftFlatValue = configPage6.flatSRetard;
-  }
-  else { BIT_CLEAR(currentStatus.status5, BIT_STATUS5_FLATSS); }
+  // Get the current time in microseconds
+  uint32_t now = micros();
 
+  // Check if enough time has passed since the last flat shift (debounce logic)
+  bool debouncePassed = (now - lastFSStartTime) > ((configPage9.unused10_110 * 1000UL) + (configPage9.unused10_111 * 1000UL));
+
+  // Determine whether the flat shift condition is met:
+  // - Feature is enabled
+  // - Clutch trigger is active
+  // - RPM when clutch was engaged is above arm threshold
+  // - Current RPM is within soft window of engaged RPM
+  bool flatSCondition = configPage6.flatSEnable &&
+                        currentStatus.clutchTrigger &&
+                        (currentStatus.clutchEngagedRPM > ((unsigned int)(configPage6.flatSArm) * 100)) &&
+                        (currentStatus.RPM > (currentStatus.clutchEngagedRPM - (configPage6.flatSSoftWin * 100)));
+
+  // If the condition is met and debounce has passed, trigger flat shift
+  if (flatSCondition && debouncePassed)
+  {
+    flatSStartTime = now;                       // Start timing flat shift duration
+    flatSActive = true;                         // Set active flag
+    lastFSStartTime = now;                      // Update last trigger time for debounce
+  }
+
+  // If flat shift is active and within the defined duration
+  if (flatSActive && ((now - flatSStartTime) <= (configPage9.unused10_110 * 1000UL)))
+  {
+    BIT_SET(currentStatus.status5, BIT_STATUS5_FLATSS); // Set status bit to indicate flat shift active
+    ignSoftFlatValue = configPage6.flatSRetard;         // Apply ignition retard value
+  }
+  else
+  {
+    BIT_CLEAR(currentStatus.status5, BIT_STATUS5_FLATSS); // Clear status bit
+    flatSActive = false;                                  // Reset active flag
+  }
+
+  // Return the possibly modified ignition advance value
   return ignSoftFlatValue;
 }
-
+// Quickshifter adjustments for flat shift KYLE END
 
 uint8_t _calculateKnockRecovery(uint8_t curKnockRetard)
 {
