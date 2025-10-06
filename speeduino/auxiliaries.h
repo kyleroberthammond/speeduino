@@ -13,6 +13,7 @@ void vvtControl(void);
 void initialiseFan(void);
 void initialiseAirCon(void);
 void nitrousControl(void);
+void downshifterControl(void);
 void fanControl(void);
 void airConControl(void);
 bool READ_AIRCON_REQUEST(void);

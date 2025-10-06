@@ -1028,6 +1028,27 @@ void nitrousControl(void)
   }
 }
 
+
+void downshifterControl(void){
+  bool downshiftActive = READ_N2O_ARM_PIN();
+  if (configPage10.n2o_pin_polarity == 1) { downshiftActive = !downshiftActive; }
+
+  uint8_t raw = table2D_getValue(&knockWindowStartTable,currentStatus.RPM);
+  uint16_t delayMs = (uint16_t)((raw * 392U) / 100U);  // ~ raw * 3.92
+
+  // Serial.print("Downshift Pin: ");
+  // Serial.println(configPage10.n2o_arming_pin);
+  // Serial.print("Downshift Polarity: ");
+  // Serial.println(configPage10.n2o_pin_polarity);
+  // Serial.print("Downshift Active: ");
+  // Serial.println(downshiftActive);
+  // Serial.print("Current RPM: ");
+  // Serial.println(currentStatus.RPM);
+
+  // Serial.print(F("Downshift Delay raw=")); Serial.print(raw);
+  // Serial.print(F("  ms=")); Serial.println(delayMs);
+}
+
 // Water methanol injection control
 void wmiControl(void)
 {

@@ -97,11 +97,11 @@ uint16_t correctionsFuel(void)
   result = correctionCranking();
   if (result != 100) { sumCorrections = div100(sumCorrections * result); }
 
-  currentStatus.AEamount = correctionAccel();
-  if ( (configPage2.aeApplyMode == AE_MODE_MULTIPLIER) || BIT_CHECK(currentStatus.engine, BIT_ENGINE_DCC) ) // multiply by the AE amount in case of multiplier AE mode or Decel
-  {
-    if (currentStatus.AEamount != 100) { sumCorrections = div100(sumCorrections * currentStatus.AEamount);}
-  }
+  // currentStatus.AEamount = correctionAccel();
+  // if ( (configPage2.aeApplyMode == AE_MODE_MULTIPLIER) || BIT_CHECK(currentStatus.engine, BIT_ENGINE_DCC) ) // multiply by the AE amount in case of multiplier AE mode or Decel
+  // {
+  //   if (currentStatus.AEamount != 100) { sumCorrections = div100(sumCorrections * currentStatus.AEamount);}
+  // }
 
   result = correctionFloodClear();
   if (result != 100) { sumCorrections = div100(sumCorrections * result); }
