@@ -1030,23 +1030,26 @@ void nitrousControl(void)
 
 
 void downshifterControl(void){
-  bool downshiftActive = READ_N2O_ARM_PIN();
-  if (configPage10.n2o_pin_polarity == 1) { downshiftActive = !downshiftActive; }
+  bool downshiftPressed = READ_N2O_ARM_PIN();
+  if (configPage10.n2o_pin_polarity == 1) { downshiftPressed = !downshiftPressed; }
 
-  uint8_t raw = table2D_getValue(&knockWindowStartTable,currentStatus.RPM);
+  uint8_t raw = table2D_getValue(&knockWindowStartTable, currentStatus.RPMdiv100);
   uint16_t delayMs = (uint16_t)((raw * 392U) / 100U);  // ~ raw * 3.92
 
-  // Serial.print("Downshift Pin: ");
-  // Serial.println(configPage10.n2o_arming_pin);
-  // Serial.print("Downshift Polarity: ");
-  // Serial.println(configPage10.n2o_pin_polarity);
-  // Serial.print("Downshift Active: ");
-  // Serial.println(downshiftActive);
-  // Serial.print("Current RPM: ");
-  // Serial.println(currentStatus.RPM);
+  static bool downshiftActive = false;
+  static uint32_t downshiftEndTime = 0; 
 
-  // Serial.print(F("Downshift Delay raw=")); Serial.print(raw);
-  // Serial.print(F("  ms=")); Serial.println(delayMs);
+  if (downshiftPressed && !downshiftActive)
+  {
+    downshiftActive = true;
+    downshiftEndTime = millis() + delayMs;
+    N2O_STAGE1_PIN_HIGH();
+  }
+  if (downshiftActive && millis() >= downshiftEndTime)
+  {
+    downshiftActive = false;
+    N2O_STAGE1_PIN_LOW();
+  }
 }
 
 // Water methanol injection control
