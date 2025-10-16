@@ -300,7 +300,7 @@ void __attribute__((always_inline)) loop(void)
       readCLT();
       readIAT();
       readBat();
-      nitrousControl();
+      // nitrousControl();
       downshifterControl();
 
       //Lookup the current target idle RPM. This is aligned with coolant and so needs to be calculated at the same rate CLT is read
