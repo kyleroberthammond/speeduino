@@ -23,7 +23,7 @@ void calculateSecondaryFuel(void)
   uint16_t timeBin = get3DTableValue(&afrTable, tpsdotBin, (table3d_axis_t)currentStatus.RPM);
   uint16_t timeDelayMs = (uint16_t)(timeBin * 392UL / 100); // same as *3.92
 
-  if (!aeActive && (currentStatus.tpsDOT > configPage2.taeThresh)) // If ae not active set it up.
+  if (!aeActive && (currentStatus.tpsDOT > configPage2.taeThresh) && (abs(TPS_change) >= configPage2.taeMinChange)) // If ae not active set it up.
   {
     triggeredTPSDOT = currentStatus.tpsDOT;
     // Apply the AE if the TPSdot exceeds the threshold
