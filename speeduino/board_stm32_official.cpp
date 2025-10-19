@@ -95,7 +95,7 @@ STM32RTC& rtc = STM32RTC::getInstance();
     #ifndef HAVE_HWSERIAL2 //Hack to get the code to compile on BlackPills
     #define Serial2 Serial1
     #endif
-    pSecondarySerial = &Serial2;
+    pSecondarySerial = &Serial3;
 
     /*
     ***********************************************************************************************************

@@ -2257,131 +2257,46 @@ void setPinMapping(byte boardID)
     #endif
 
     case 55:
-      #if defined(CORE_TEENSY)
-      //Pin mappings for the DropBear
-      injectorOutputControl = OUTPUT_CONTROL_MC33810;
-      ignitionOutputControl = OUTPUT_CONTROL_MC33810;
-
-      //The injector pins below are not used directly as the control is via SPI through the MC33810s, however the pin numbers are set to be the SPI pins (SCLK, MOSI, MISO and CS) so that nothing else will set them as inputs
-      pinInjector1 = 13; //SCLK
-      pinInjector2 = 11; //MOSI
-      pinInjector3 = 12; //MISO
-      pinInjector4 = 10; //CS for MC33810 1
-      pinInjector5 = 9; //CS for MC33810 2
-      pinInjector6 = 9; //CS for MC33810 3
-
-      //Dummy pins, without these pin 0 (Serial1 RX) gets overwritten
-      pinCoil1 = 40;
-      pinCoil2 = 41;
-      /*
-      pinCoil3 = 55;
-      pinCoil4 = 55;
-      pinCoil5 = 55;
-      pinCoil6 = 55;
-      */
-      
-      pinTrigger = 19; //The CAS pin
-      pinTrigger2 = 18; //The Cam Sensor pin
-      pinTrigger3 = 22; //Uses one of the protected spare digital inputs. This must be set or Serial1 (Pin 0) gets broken
-      pinFlex = A16; // Flex sensor
-      pinMAP = A1; //MAP sensor pin
-      pinBaro = A0; //Baro sensor pin
-      pinBat = A14; //Battery reference voltage pin
-      pinSpareTemp1 = A17; //spare Analog input 1
-      pinLaunch = A15; //Can be overwritten below
-      pinTachOut = 5; //Tacho output pin
-      pinIdle1 = 27; //Single wire idle control
-      pinIdle2 = 29; //2 wire idle control. Shared with Spare 1 output
-      pinFuelPump = 8; //Fuel pump output
-      pinVVT_1 = 28; //Default VVT output
-      pinStepperDir = 32; //Direction pin  for DRV8825 driver
-      pinStepperStep = 31; //Step pin for DRV8825 driver
-      pinStepperEnable = 30; //Enable pin for DRV8825 driver
-      pinBoost = 24; //Boost control
-      pinSpareLOut1 = 29; //low current output spare1
-      pinSpareLOut2 = 26; //low current output spare2
-      pinSpareLOut3 = 28; //low current output spare3
-      pinSpareLOut4 = 29; //low current output spare4
-      pinFan = 25; //Pin for the fan output
-      pinResetControl = 46; //Reset control output PLACEHOLDER value for now
-      pinVSS = 22;
-
-      pinWMIEmpty = 23; //Spare digital input
-      pinWMIIndicator = pinSpareLOut2; //Spare output
-      pinWMIEnabled = pinSpareLOut1; //Spare output
-
-      //CS pin number is now set in a compile flag. 
-      // #ifdef USE_SPI_EEPROM
-      //   pinSPIFlash_CS = 6;
-      // #endif
-
-      #if defined(CORE_TEENSY35)
-        pinTPS = A22; //TPS input pin
-        pinIAT = A19; //IAT sensor pin
-        pinCLT = A20; //CLS sensor pin
-        pinO2 = A21; //O2 Sensor pin
-        pinO2_2 = A18; //Spare 2
-
-        pSecondarySerial = &Serial1; //Header that is broken out on Dropbear boards is attached to Serial1
-      #endif
-
-      #if defined(CORE_TEENSY41)
-        //New pins for the actual T4.1 version of the Dropbear
-        pinBaro = A4; 
-        pinMAP = A5;
-        pinTPS = A3; //TPS input pin
-        pinIAT = A0; //IAT sensor pin
-        pinCLT = A1; //CLS sensor pin
-        pinO2 = A2; //O2 Sensor pin
-        pinBat = A15; //Battery reference voltage pin. Needs Alpha4+
-        pinLaunch = 36;
-        pinFlex = 37; // Flex sensor
-        pinSpareTemp1 = A16; 
-        pinSpareTemp2 = A17;
-
-        pinTrigger = 20; //The CAS pin
-        pinTrigger2 = 21; //The Cam Sensor pin
-        pinTrigger3 = 34; //Uses one of the protected spare digital inputs.
-
-        pinFuelPump = 5; //Fuel pump output
-        pinTachOut = 0; //Tacho output pin
-
-        pinResetControl = 49; //PLaceholder only. Cannot use 42-47 as these are the SD card
-        pinWMIEmpty = 35; //Spare digital input
-        pinVSS = 34;
-
-        //CS pin number is now set in a compile flag. 
-        // #ifdef USE_SPI_EEPROM
-        //   pinSPIFlash_CS = 33;
-        // #endif
-
-      #endif
-
-        pinMC33810_1_CS = 10;
-        pinMC33810_2_CS = 9;
-
-      //Pin alignment to the MC33810 outputs
-      MC33810_BIT_INJ1 = 3;
-      MC33810_BIT_INJ2 = 1;
-      MC33810_BIT_INJ3 = 0;
-      MC33810_BIT_INJ4 = 2;
-      MC33810_BIT_IGN1 = 4;
-      MC33810_BIT_IGN2 = 5;
-      MC33810_BIT_IGN3 = 6;
-      MC33810_BIT_IGN4 = 7;
-
-      MC33810_BIT_INJ5 = 3;
-      MC33810_BIT_INJ6 = 1;
-      MC33810_BIT_INJ7 = 0;
-      MC33810_BIT_INJ8 = 2;
-      MC33810_BIT_IGN5 = 4;
-      MC33810_BIT_IGN6 = 5;
-      MC33810_BIT_IGN7 = 6;
-      MC33810_BIT_IGN8 = 7;
+      pinInjector1 = PD12;
+      pinInjector2 = PD13;
+      pinInjector3 = PD14;
+      pinInjector4 = PD15;
+      pinInjector5 = PE9;
+      pinInjector6 = PE11;
+      pinInjector7 = PE14;
+      pinInjector8 = PE13;
+      pinCoil1 = PD7;
+      pinCoil2 = PB9;
+      pinCoil3 = PA8;
+      pinCoil4 = PD10;
+      pinCoil5 = PD8;
+      pinCoil6 = PD11;
+      pinCoil7 = PE10;
+      pinCoil8 = PE8;
+      pinTrigger = PE0;
+      pinTrigger2 = PE1;
+      pinTPS = PC1;
+      pinMAP = PC2;
+      pinIAT = PC0;
+      pinCLT = PC3;
+      pinO2 = PC4;
+      pinBat = PC5;
+      pinBaro = PB1;
+      pinTachOut = PC13;
+      pinIdle1 = PC7;
+      pinIdle2 = PD3;
+      pinBoost = PC6;
+      pinVVT_1 = PB12;
+      pinFuelPump = PE3;
+      pinStepperDir = PE7;
+      pinStepperStep = PE5;
+      pinStepperEnable = PE2;
+      pinFan = PE6;
+      pinLaunch = PB7;
+      pinFlex = PD4;
+      pinVSS = PE12;
 
 
-
-      #endif
       break;
 
     case 56:
