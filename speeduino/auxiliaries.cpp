@@ -1214,57 +1214,61 @@ void vvtControl(void)
 void downshifterControl(void)
 {
   bool downshiftPressed = READ_N2O_ARM_PIN();
-  if (configPage10.n2o_pin_polarity == 1) downshiftPressed = !downshiftPressed;
+  if (configPage10.n2o_pin_polarity == 1)
+    downshiftPressed = !downshiftPressed;
 
   uint8_t raw = table2D_getValue(&knockWindowStartTable, currentStatus.RPMdiv100);
 
   // Convert to microseconds to match micros()
-  uint32_t delay_us    = (uint32_t)raw * 3920UL;      // ≈ raw * 3.92 ms
-  const uint32_t debounce_us = 500UL * 1000UL;       // 2000 ms
+  uint32_t delay_us = (uint32_t)raw * 3920UL;  // ≈ raw * 3.92 ms
+  const uint32_t debounce_us = 500UL * 1000UL; // 2000 ms
 
-  static bool     downshiftActive = false;
-  static uint32_t t_start         = 0;
-  static uint32_t t_end           = 0;
-  static uint32_t t_debounce_until= 0;
+  static bool downshiftActive = false;
+  static uint32_t t_start = 0;
+  static uint32_t t_end = 0;
+  static uint32_t t_debounce_until = 0;
 
-  if (downshiftPressed && !downshiftActive && (int32_t)(micros() - t_debounce_until) >= 0)
+  if (configPage10.n2o_enable > 0)
   {
-    t_start = micros();
-    t_end   = t_start + delay_us;
+    if (downshiftPressed && !downshiftActive && (int32_t)(micros() - t_debounce_until) >= 0)
+    {
+      t_start = micros();
+      t_end = t_start + delay_us;
 
-    BIT_SET(currentStatus.status3, BIT_STATUS3_NITROUS);
-    N2O_STAGE1_PIN_HIGH();
-    // openInjector8(); // Use the 8th injector output for the downshift solenoid
-    downshiftActive = true;
+      BIT_SET(currentStatus.status3, BIT_STATUS3_NITROUS);
+      N2O_STAGE1_PIN_HIGH();
+      // openInjector8(); // Use the 8th injector output for the downshift solenoid
+      downshiftActive = true;
 
-    // Serial.print("Downshift start @ ");
-    // Serial.print(t_start);
-    // Serial.print("us, duration ");
-    // Serial.print(delay_us / 1000.0);
-    // Serial.println(" ms");
-  }
+      // Serial.print("Downshift start @ ");
+      // Serial.print(t_start);
+      // Serial.print("us, duration ");
+      // Serial.print(delay_us / 1000.0);
+      // Serial.println(" ms");
+    }
 
-  if (downshiftActive && (int32_t)(micros() - t_end) >= 0)
-  {
-    downshiftActive = false;
-    BIT_CLEAR(currentStatus.status3, BIT_STATUS3_NITROUS);
-    N2O_STAGE1_PIN_LOW();
-    // closeInjector8(); // Use the 8th injector output for the downshift solenoid
+    if (downshiftActive && (int32_t)(micros() - t_end) >= 0)
+    {
+      downshiftActive = false;
+      BIT_CLEAR(currentStatus.status3, BIT_STATUS3_NITROUS);
+      N2O_STAGE1_PIN_LOW();
+      // closeInjector8(); // Use the 8th injector output for the downshift solenoid
 
-    uint32_t t_stop = micros();
-    uint32_t actual_us = t_stop - t_start;
+      uint32_t t_stop = micros();
+      uint32_t actual_us = t_stop - t_start;
 
-    // Serial.print("Downshift end @ ");
-    // Serial.print(t_stop);
-    // Serial.print("us (expected ");
-    // Serial.print(delay_us);
-    // Serial.print("us, actual ");
-    // Serial.print(actual_us);
-    // Serial.print("us = ");
-    // Serial.print(actual_us / 1000.0);
-    // Serial.println(" ms)");
+      // Serial.print("Downshift end @ ");
+      // Serial.print(t_stop);
+      // Serial.print("us (expected ");
+      // Serial.print(delay_us);
+      // Serial.print("us, actual ");
+      // Serial.print(actual_us);
+      // Serial.print("us = ");
+      // Serial.print(actual_us / 1000.0);
+      // Serial.println(" ms)");
 
-    t_debounce_until = t_stop + debounce_us;
+      t_debounce_until = t_stop + debounce_us;
+    }
   }
 }
 
