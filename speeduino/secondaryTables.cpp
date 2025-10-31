@@ -9,65 +9,87 @@ void calculateSecondaryFuel(void)
   static bool aeActive = false;
 
   static int16_t triggeredTPSDOT = 0;
+  static uint32_t aeStartTimeUs = 0;
+  static uint32_t aeEndTimeUs = 0;
+  static uint8_t aeStartVE2 = 100;   // VE2 captured at AE start
+
   int16_t TPS_change = 0;
   const uint32_t now = micros_safe();
 
-  // Calculate TPSdot START
-  // TPS_change = current.tpsDOT; // For testing
+  // TPSdot calc
   TPS_change = (currentStatus.TPS - currentStatus.TPSlast);
-  currentStatus.tpsDOT = (TPS_READ_FREQUENCY * TPS_change) / 2; // This is the % per second that the TPS has moved, adjusted for the 0.5% resolution of the TPS
-  // Calculate TPSdot END
+  currentStatus.tpsDOT = (TPS_READ_FREQUENCY * TPS_change) / 2;
 
-  const uint16_t tpsdotBin = (uint16_t)currentStatus.tpsDOT / 8; // This gets the TPS Dot BIN (0-255) for the TPSdot value
-  // const uint16_t tpsdotBin = (uint16_t)getLoad(LOAD_SOURCE_TPSDOT, currentStatus); // This gets the TPS Dot BIN (0-255) for the TPSdot value
+  const uint16_t tpsdotBin = (uint16_t)currentStatus.tpsDOT / 8;
   uint16_t timeBin = get3DTableValue(&afrTable, tpsdotBin, (table3d_axis_t)currentStatus.RPM);
-  uint16_t timeDelayMs = (uint16_t)(timeBin * 392UL / 100); // same as *3.92
+  uint16_t timeDelayMs = (uint16_t)(timeBin * 392UL / 100); // *3.92
 
-  // Serial.print("TPSChange: ");
-  // Serial.print(TPS_change);
-  // Serial.print(" TPSdot: ");
-  // Serial.print(currentStatus.tpsDOT);
-
-
-  if (!aeActive && (currentStatus.tpsDOT > configPage2.taeThresh) && (abs(TPS_change) >= configPage2.taeMinChange)) // If ae not active set it up.
+  // trigger condition
+  if (!aeActive && (currentStatus.tpsDOT > configPage2.taeThresh) && (abs(TPS_change) >= configPage2.taeMinChange))
   {
     triggeredTPSDOT = currentStatus.tpsDOT;
-    // Apply the AE if the TPSdot exceeds the threshold
-    // Get the amount of time required
-    aeActive = true; // Set AE as on
-    currentStatus.AEEndTime = now + (uint32_t)timeDelayMs * 1000UL;
-    BIT_SET(currentStatus.status3, BIT_STATUS3_FUEL2_ACTIVE); // Set the bit indicating that the 2nd fuel table is in use.
-    currentStatus.VE2 = getVE2();                             // Get the VE2 value and apply it
+    aeActive = true;
+
+    aeStartTimeUs = now;
+    aeEndTimeUs   = now + (uint32_t)timeDelayMs * 1000UL;
+
+    BIT_SET(currentStatus.status3, BIT_STATUS3_FUEL2_ACTIVE);
+
+    currentStatus.VE2 = getVE2();      // could be <100 or >100
+    aeStartVE2 = currentStatus.VE2;    // remember start point
+
     auto combinedVE = percentage(currentStatus.VE2, currentStatus.VE1);
     currentStatus.VE = (uint8_t)min((uint32_t)UINT8_MAX, combinedVE);
   }
-  else if (aeActive) // If the time has elapsed, turn off AE
+  else if (aeActive)
   {
-    // First check if the tpsdot has increased if so change the end time etc
+    // if TPSdot climbs again, restart AE from new value
     if (currentStatus.tpsDOT > triggeredTPSDOT)
     {
       triggeredTPSDOT = currentStatus.tpsDOT;
-      // Recalc it all and change the end time.
-      currentStatus.AEEndTime = now + (uint32_t)timeDelayMs * 1000UL;
-      currentStatus.VE2 = getVE2(); // Get the VE2 value and apply it
+
+      aeStartTimeUs = now;
+      aeEndTimeUs   = now + (uint32_t)timeDelayMs * 1000UL;
+
+      currentStatus.VE2 = getVE2();
+      aeStartVE2 = currentStatus.VE2;
+    }
+
+    uint32_t totalDurUs = (aeEndTimeUs > aeStartTimeUs) ? (aeEndTimeUs - aeStartTimeUs) : 1;
+    uint32_t elapsedUs  = (now > aeStartTimeUs) ? (now - aeStartTimeUs) : 0;
+
+    if (now >= aeEndTimeUs)
+    {
+      // done: return to 100%
+      aeActive = false;
+      currentStatus.VE2 = 100;
+      BIT_CLEAR(currentStatus.status3, BIT_STATUS3_FUEL2_ACTIVE);
+
       auto combinedVE = percentage(currentStatus.VE2, currentStatus.VE1);
       currentStatus.VE = (uint8_t)min((uint32_t)UINT8_MAX, combinedVE);
     }
     else
-    { // Otherwise make sure the current ve isnt being overwritten
+    {
+      // progress 0..1
+      uint32_t progNum = elapsedUs;
+      if (progNum > totalDurUs) progNum = totalDurUs;
+
+      // linear lerp from aeStartVE2 -> 100
+      // VE2(t) = start + (100 - start) * progress
+      int16_t target = 100;
+      int16_t start  = aeStartVE2;
+      int16_t diff   = target - start;          // can be + or -
+      int16_t ve2Now = start + (int32_t)diff * progNum / totalDurUs;
+
+      currentStatus.VE2 = (uint8_t)ve2Now;
+
       auto combinedVE = percentage(currentStatus.VE2, currentStatus.VE1);
       currentStatus.VE = (uint8_t)min((uint32_t)UINT8_MAX, combinedVE);
     }
-
-    if (now >= currentStatus.AEEndTime)
-    {
-      aeActive = false; // Set AE as off
-      currentStatus.VE2 = 0;
-      BIT_CLEAR(currentStatus.status3, BIT_STATUS3_FUEL2_ACTIVE); // Clear the bit indicating that the 2nd fuel table is in use.
-    }
-    // AE is still active, keep VE2 applied
   }
 }
+
+
 
 // void calculateSecondaryFuel(void)
 // {

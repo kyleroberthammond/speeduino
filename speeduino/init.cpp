@@ -2257,6 +2257,7 @@ void setPinMapping(byte boardID)
     #endif
 
     case 55:
+      #if defined(STM32F407xx)
       pinInjector1 = PD12;
       pinInjector2 = PD13;
       pinInjector3 = PD14;
@@ -2295,6 +2296,7 @@ void setPinMapping(byte boardID)
       pinLaunch = PB7;
       pinFlex = PD4;
       pinVSS = PE12;
+      #endif
 
 
       break;
