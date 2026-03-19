@@ -20,12 +20,12 @@ void calculateSecondaryFuel(void)
   TPS_change = (currentStatus.TPS - currentStatus.TPSlast);
   currentStatus.tpsDOT = (TPS_READ_FREQUENCY * TPS_change) / 2;
 
-  const uint16_t tpsdotBin = (uint16_t)currentStatus.tpsDOT / 8;
+  const uint16_t tpsdotBin = (uint16_t)(abs(currentStatus.tpsDOT) / 8);
   uint16_t timeBin = get3DTableValue(&afrTable, tpsdotBin, (table3d_axis_t)currentStatus.RPM);
   uint16_t timeDelayMs = (uint16_t)(timeBin * 392UL / 100); // *3.92
 
   // trigger condition
-  if (!aeActive && (currentStatus.tpsDOT > configPage2.taeThresh) && (abs(TPS_change) >= configPage2.taeMinChange))
+  if (!aeActive && (abs(currentStatus.tpsDOT) > configPage2.taeThresh) && (abs(TPS_change) >= configPage2.taeMinChange))
   {
     triggeredTPSDOT = currentStatus.tpsDOT;
     aeActive = true;
@@ -44,7 +44,7 @@ void calculateSecondaryFuel(void)
   else if (aeActive)
   {
     // if TPSdot climbs again, restart AE from new value
-    if (currentStatus.tpsDOT > triggeredTPSDOT)
+    if (abs(currentStatus.tpsDOT) > abs(triggeredTPSDOT))
     {
       triggeredTPSDOT = currentStatus.tpsDOT;
 
@@ -288,7 +288,7 @@ byte getVE2(void)
   }
   else if (configPage10.fuel2Algorithm == LOAD_SOURCE_TPSDOT)
   {
-    uint16_t dot = currentStatus.tpsDOT * 2;
+    uint16_t dot = (uint16_t)(abs(currentStatus.tpsDOT) * 2);
     currentStatus.fuelLoad2 = (int16_t)(dot / 8);
     // return (int16_t)(dot / 8); // 1 bin = 8 %/s
   }
